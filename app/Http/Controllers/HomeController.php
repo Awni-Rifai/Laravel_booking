@@ -17,27 +17,31 @@ class HomeController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth');
+
     }
 
     /**
      * Show the application dashboard.
      *
-     * @return \Illuminate\Contracts\Support\Renderable
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View|\Illuminate\Http\RedirectResponse
      */
     public function index()
+
     {
+
+
         $name= Auth::user()->role->name;
+
         if ($name==="admin" || $name==="super_admin") {
+
+
 
            return  redirect()->route('admin.dashboard');
 
         }
+        return redirect()->route('guest_home');
 
-        return  view('pages.index',[
-            'categories'=>Category::all(),
-            'meals'=>Meal::take(6)->get() ,
-        ]);
+
 
 
 

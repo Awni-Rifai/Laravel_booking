@@ -34,32 +34,28 @@ class UserReservationController extends Controller
             'auth_user'=>Auth::user(),
         ]);
     }
+    private function get_number_of_days($checkin_date,$checkout_date){
+        return (strtotime($checkin_date)-(strtotime($checkout_date)))/(3600*24);
 
+    }
 
     public function store(Request $request)
     {
+        $checkin_date = session('checkin_date');
+        $checkout_date = session('checkout_date');
+
+        $reservation = new UserReservation();
+        $reservation->room_id           = session('room_id');
+        $reservation->user_id           = Auth::user()->id;
+        $reservation->total_price       = session('total_price');
+        $reservation->number_of_days    = $this->get_number_of_days($checkin_date, $checkout_date);
+        $reservation->checkin_date      = $checkin_date;
+        $reservation->checkout_date     = $checkout_date;
+        $reservation->total_adults      = 2;
+        $reservation->save();
 
 
-        /* dd($request->all());  */ // just to check data
-        $number_of_days=(strtotime($request->checkout_date)-(strtotime($request->checkin_date)))/(3600*24);
-
-
-
-      $reservation = new UserReservation();
-            $reservation->room_id     =  $request->room_id;
-            $reservation->user_id     =   Auth::user()->id;
-            $reservation->total_price  =   $request->total_price;
-            $reservation->number_of_days = $number_of_days;
-            $reservation->checkin_date  =  $request->checkin_date;
-            $reservation->checkout_date = $request->checkout_date;
-            $reservation->total_adults   = 2;
-            $reservation->save();
-
-
-
-
-
-        if($request->book){
+        if(session('book')){
             return view('pages.succeed');
         }
 
@@ -120,6 +116,10 @@ class UserReservationController extends Controller
         $checkin=UserReservation::where('checkout_date','>=',"{$req->checkin_date}")
                                 ->where('checkin_date','<=',"{$req->checkin_date}")
                                 ->get("room_id");
+
+
+
+
         $availableRooms=room::whereNotIn('id',$checkin)->get();
         $availableRooms= $availableRooms->where('category_id',$req->category_id)
                                          ->where('number_of_beds',$req->number_of_beds);

@@ -7,6 +7,8 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserReservationController;
+use App\Http\Controllers\UserPublicController;
+
 use App\Models\Category;
 use App\Models\Review;
 use App\Models\room;
@@ -14,6 +16,7 @@ use App\Models\Meal;
 use App\Models\User;
 use App\Models\UserReservation;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use phpDocumentor\Reflection\Types\Resource_;
@@ -40,7 +43,7 @@ Route::get('/admin', function () {
 
 
     return view('admin.index',[
-        "all_rooms"=>room::all()->count(),
+        "all_rooms"=>room::count(),
         "rooms_booked"=>room::where('status',1)->count(),
         'rooms_available'=>room::where('status',0)->count(),
         'number_of_users'=>user::all()->where('role_id',1)->count(),
@@ -62,7 +65,25 @@ Route::get('/allRooms', [RoomController::class,'show_all_available_rooms'])->nam
 Route::post('/rooms', [UserReservationController::class,'available_rooms'])->name('public.availableRooms');
 Route::get('/single-room',[RoomController::class,'single_rooms'])->name('public.singleRoom');
 //this route for booing
-Route::post('/book',[UserReservationController::class,'store'])->name('book_now')->middleware('auth');
+Route::post('/book',function(Request $request){
+    session('_previous')['url']="http://127.0.0.1:8000/single-room/bookR";
+
+    session([
+        'room_id'      =>$request->room_id,
+        'total_price'  =>$request->total_price,
+        'checkin_date' =>$request->checkin_date,
+        'checkout_date'=>$request->checkout_date,
+        'book'         =>$request->book,
+
+    ]) ;
+    return redirect('/bookR');
+
+
+
+})->name('book_now');
+Route::get('/bookR',[UserReservationController::class,'store'])->middleware('auth');
+
+
 
 
 
@@ -76,18 +97,19 @@ Route::get('/signupTheme',function(){
 
 Route::get('/pages/restaurant-single', function (Meal $id,Request $request) {
     // dd('helllllllllllo');
-  
+
+
     $meal    = Meal::find($request->id);
-    $reviews = Review::where('meal_id', $request->id)->get();
+    $reviews = Review::where('mذeal_id', $request->id)->get();
 
     return view('pages.restaurant-single',[
 
         'meal'   => $meal ,
-        'reviews'=> $reviews 
+        'reviews'=> $reviews
 
     ]);
 
-})->name('single-meal');
+    })->name('single-meal');
 
 
 Route::get('/pages/restaurant', function () {
@@ -99,11 +121,15 @@ Route::get('/pages/rooms-single', function () {
     return view('pages.rooms-single');
 });
 
-Auth::routes();
+
 
 Route::get('/home', [HomeController::class, 'index'])->name('home');
+Auth::routes();
 Route::get('/', function(){
     return view('pages.index',[
         'categories'=>Category::all(),
+        'meals'=>Meal::take(6)->get() ,
     ]);
 })->name('guest_home');
+
+Route::resource('/pages/userProfile', UserPublicController::class);

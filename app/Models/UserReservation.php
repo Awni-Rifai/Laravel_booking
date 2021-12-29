@@ -18,6 +18,15 @@ class UserReservation extends Model
         'checkout_date',
         'total_adults',
     ];
+    /**
+     * @var float|int|mixed
+     */
+
+
+    /**
+     * @var \Illuminate\Contracts\Foundation\Application|\Illuminate\Session\SessionManager|\Illuminate\Session\Store|mixed
+     */
+
     function user(){
         return $this->belongsTo(User::class);
     }
